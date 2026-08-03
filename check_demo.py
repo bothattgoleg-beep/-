@@ -1,18 +1,8 @@
-import os
-import sys
-
 import requests
 from bs4 import BeautifulSoup
 
 URL = "https://hdmn.cloud/en/demo/success"
-# Email не хардкодим в коде, а берём из переменной окружения / GitHub Secret
-EMAIL = os.environ.get("DEMO_MAIL")
-
-if not EMAIL:
-    sys.exit(
-        "Не задан email: установи переменную окружения DEMO_MAIL "
-        "(в GitHub Actions — через Settings -> Secrets and variables -> Actions)."
-    )
+EMAIL = "hatgpt575@gmail.com"
 
 session = requests.Session()
 session.headers.update({
