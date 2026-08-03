@@ -1,0 +1,37 @@
+name: Demo form check
+
+on:
+  workflow_dispatch:        # ручной запуск: вкладка Actions -> Run workflow
+  # Расписание намеренно закомментировано.
+  # Включай, только если email действительно твой и цель — мониторинг формы,
+  # а не регулярная повторная отправка чужого адреса.
+  # schedule:
+  #   - cron: "0 6 * * *"   # раз в сутки, 06:00 UTC
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run script
+        env:
+          DEMO_MAIL: ${{ secrets.DEMO_MAIL }}
+        run: python check_demo.py
+
+      - name: Upload response
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-response
+          path: |
+            response.html
+            response.txt
