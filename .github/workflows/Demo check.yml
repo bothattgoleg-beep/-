@@ -1,37 +1,36 @@
-name: Demo form check
+import requests
+from bs4 import BeautifulSoup
 
-on:
-  workflow_dispatch:        # ручной запуск: вкладка Actions -> Run workflow
-  # Расписание намеренно закомментировано.
-  # Включай, только если email действительно твой и цель — мониторинг формы,
-  # а не регулярная повторная отправка чужого адреса.
-  # schedule:
-  #   - cron: "0 6 * * *"   # раз в сутки, 06:00 UTC
+URL = "https://hdmn.cloud/en/demo/success"
+EMAIL = "hatgpt575@gmail.com"
 
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+session = requests.Session()
+session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+})
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+resp = session.post(
+    URL,
+    data={"demo_mail": EMAIL},
+    allow_redirects=True,
+    timeout=15,
+)
+resp.raise_for_status()
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+# сохранить сырой ответ
+with open("response.html", "w", encoding="utf-8") as f:
+    f.write(resp.text)
 
-      - name: Run script
-        env:
-          DEMO_MAIL: ${{ secrets.DEMO_MAIL }}
-        run: python check_demo.py
+# извлечь видимый текст
+soup = BeautifulSoup(resp.text, "html.parser")
+for tag in soup(["script", "style", "noscript"]):
+    tag.decompose()
 
-      - name: Upload response
-        uses: actions/upload-artifact@v4
-        with:
-          name: demo-response
-          path: |
-            response.html
-            response.txt
+text = "\n".join(
+    line.strip() for line in soup.get_text("\n").splitlines() if line.strip()
+)
+
+with open("response.txt", "w", encoding="utf-8") as f:
+    f.write(text)
+
+print(text)
